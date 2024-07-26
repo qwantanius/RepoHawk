@@ -11,7 +11,10 @@ import {
 import { CVSAdapterService } from '@/adapters/adapter.abstract';
 import { AdapterService } from '@/adapters/adapter.factory';
 import { CSPFileExposeGuard } from '@/adapters/github/csp-file-expose.guard';
-import { ApiTokenGuard } from '@/guards/api-token.guard';
+import { CVSFileReportDto } from '@/core/dtos/files.dto';
+import { CVSRepositoryDto } from '@/core/dtos/repository.dto';
+import { CVSRepositoryWebhookDto } from '@/core/dtos/webhooks.dto';
+import { ApiTokenGuard } from '@/core/guards/api-token.guard';
 
 @Controller('adapters')
 export class CVSAdapterController {
@@ -22,7 +25,7 @@ export class CVSAdapterController {
     async getRepositories(
         @Param('adapterToken') adapterToken: string,
         @Headers('API_TOKEN') apiToken: string,
-    ) {
+    ): Promise<CVSRepositoryDto[] | undefined> {
         return this.getAdapterOrFail(adapterToken)?.getCvsRepositories(apiToken);
     }
 
@@ -46,7 +49,7 @@ export class CVSAdapterController {
         @Param('owner') owner: string,
         @Param('repo') repo: string,
         @Headers('API_TOKEN') apiToken: string,
-    ) {
+    ): Promise<CVSFileReportDto | undefined> {
         return this.getAdapterOrFail(adapterToken)?.getCvsRepositoryFiles(apiToken, owner, repo);
     }
 
@@ -59,7 +62,7 @@ export class CVSAdapterController {
         @Param('repo') repo: string,
         @Query('path') path: string,
         @Headers('API_TOKEN') apiToken: string,
-    ) {
+    ): Promise<string | undefined> {
         return this.getAdapterOrFail(adapterToken)?.getCvsFileContent(apiToken, owner, repo, path);
     }
 
@@ -70,7 +73,7 @@ export class CVSAdapterController {
         @Param('owner') owner: string,
         @Param('repo') repo: string,
         @Headers('API_TOKEN') apiToken: string,
-    ) {
+    ): Promise<CVSRepositoryWebhookDto[] | undefined> {
         return this.getAdapterOrFail(adapterToken)?.getCvsRepositoryWebhooks(apiToken, owner, repo);
     }
 

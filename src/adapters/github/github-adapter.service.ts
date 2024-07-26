@@ -3,9 +3,10 @@ import { ConfigService } from '@nestjs/config';
 
 import { CVSAdapterService } from '@/adapters/adapter.abstract';
 import { GithubApiService } from '@/adapters/github/api.service';
-import { IGithubRepositoryFile } from '@/adapters/github/types/github-repository-file.interface';
-import { IGithubRepositoryWebhook } from '@/adapters/github/types/github-repository-webhook.interface';
 import { IGithubRepository } from '@/adapters/github/types/github-repository.interface';
+import { CVSFileReportDto } from '@/core/dtos/files.dto';
+import { CVSRepositoryDto } from '@/core/dtos/repository.dto';
+import { CVSRepositoryWebhookDto } from '@/core/dtos/webhooks.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class GithubAdapterService implements CVSAdapterService {
@@ -21,36 +22,35 @@ export class GithubAdapterService implements CVSAdapterService {
     async getCvsOrgRepositories(
         apiToken: string,
         organisationName: string,
-    ): Promise<IGithubRepository[] | undefined> {
-        const repositories = this.apiService.getGithubOrgRepositories(apiToken, organisationName);
+    ): Promise<CVSRepositoryDto[] | undefined> {
+        const repositories = await this.apiService.getGithubOrgRepositories(
+            apiToken,
+            organisationName,
+        );
 
-        return repositories;
+        return repositories?.map((repo) => this.repositoryInterfaceToDto(repo));
     }
 
-    async getCvsRepositories(apiToken: string): Promise<IGithubRepository[] | undefined> {
-        const repositories = this.apiService.getGithubRepositories(apiToken);
+    async getCvsRepositories(apiToken: string): Promise<CVSRepositoryDto[] | undefined> {
+        const repositories = await this.apiService.getGithubRepositories(apiToken);
 
-        return repositories;
+        return repositories?.map((repo) => this.repositoryInterfaceToDto(repo));
     }
 
     async getCvsRepositoryFiles(
         apiToken: string,
         owner: string,
         repo: string,
-    ): Promise<IGithubRepositoryFile[] | undefined> {
-        const webhooks = this.apiService.getRepositoryFiles(apiToken, owner, repo);
-
-        return webhooks;
+    ): Promise<CVSFileReportDto> {
+        return this.apiService.getRepositoryFiles(apiToken, owner, repo);
     }
 
     async getCvsRepositoryWebhooks(
         apiToken: string,
         owner: string,
         repo: string,
-    ): Promise<IGithubRepositoryWebhook[] | undefined> {
-        const webhooks = this.apiService.getRepositoryWebhooks(apiToken, owner, repo);
-
-        return webhooks;
+    ): Promise<CVSRepositoryWebhookDto[] | undefined> {
+        return this.apiService.getRepositoryWebhooks(apiToken, owner, repo);
     }
 
     async getCvsFileContent(
@@ -59,8 +59,25 @@ export class GithubAdapterService implements CVSAdapterService {
         repo: string,
         path: string,
     ): Promise<string | undefined> {
-        const fileContent = this.apiService.fetchFileContent(apiToken, owner, repo, path);
+        return this.apiService.fetchFileContent(apiToken, owner, repo, path);
+    }
 
-        return fileContent;
+    private repositoryInterfaceToDto(repo: IGithubRepository): CVSRepositoryDto {
+        return {
+            id: repo.id,
+            name: repo.name,
+            private: repo.private,
+            description: repo.description,
+            fork: repo.fork,
+            full_name: repo.full_name,
+            disabled: repo.disabled,
+            git_url: repo.git_url,
+            owner: repo.owner,
+            url: repo.url,
+            clone_url: repo.url,
+            permissions: repo.permissions || {
+                admin: false,
+            },
+        };
     }
 }

@@ -1,11 +1,19 @@
 import { HttpService } from '@nestjs/axios';
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+    HttpStatus,
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
+} from '@nestjs/common';
 import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { lastValueFrom } from 'rxjs';
 
 import { IGithubRepositoryFile } from '@/adapters/github/types/github-repository-file.interface';
 import { IGithubRepositoryWebhook } from '@/adapters/github/types/github-repository-webhook.interface';
 import { IGithubRepository } from '@/adapters/github/types/github-repository.interface';
+import { CVSFileReportDto } from '@/core/dtos/files.dto';
+import { bytesToMegaBytes } from '@/system/bytes-to-megabytes.sys';
+import { roundFloat } from '@/system/round-float.sys';
 
 @Injectable()
 export class GithubApiService {
@@ -48,6 +56,8 @@ export class GithubApiService {
             );
             return response.data;
         } catch (error) {
+            console.log(error);
+
             if (error instanceof AxiosError) {
                 if (error.response?.status === HttpStatus.NOT_FOUND) {
                     throw new NotFoundException();
@@ -56,8 +66,25 @@ export class GithubApiService {
         }
     }
 
-    async getRepositoryFiles(apiToken: string, owner: string, repo: string) {
-        return this.fetchDirectoryContents(apiToken, owner, repo);
+    async getRepositoryFiles(
+        apiToken: string,
+        owner: string,
+        repo: string,
+    ): Promise<CVSFileReportDto> {
+        try {
+            const files = await this.fetchDirectoryContents(apiToken, owner, repo);
+            const totalSizeInBytes = files?.reduce((acc, file) => acc + file.size, 0) || 0;
+
+            return {
+                numberOfFiles: files?.length || 0,
+                totalSize: `${roundFloat(bytesToMegaBytes(totalSizeInBytes), 4)} MB`,
+                files: files || [],
+            };
+        } catch (error) {
+            throw new InternalServerErrorException(
+                'An error occurred while fetching the repository files.',
+            );
+        }
     }
 
     async getRepositoryWebhooks(
@@ -81,6 +108,7 @@ export class GithubApiService {
                     throw new NotFoundException();
                 }
             }
+            console.log(error);
         }
     }
 

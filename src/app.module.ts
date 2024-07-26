@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CVSAdapterController } from '@/adapters/adapter.controller';
 import { AdapterService } from '@/adapters/adapter.factory';
 import { GithubModule } from '@/adapters/github/github.module';
-import { ApiTokenGuard } from '@/guards/api-token.guard';
+import { ApiTokenGuard } from '@/core/guards/api-token.guard';
 
 @Module({
     imports: [
@@ -17,3 +17,4 @@ import { ApiTokenGuard } from '@/guards/api-token.guard';
     providers: [AdapterService, ApiTokenGuard],
 })
 export class AppModule {}
+// abstract ignoreCvsRepository();

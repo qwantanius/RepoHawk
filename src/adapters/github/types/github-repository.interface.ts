@@ -4,7 +4,7 @@ export interface IGithubRepository {
     name: string;
     full_name: string;
     private: boolean;
-    owner: IGithubRepository;
+    owner: IGithubRepositoryOwner;
     html_url: string;
     description: any;
     fork: boolean;
@@ -78,7 +78,7 @@ export interface IGithubRepository {
     open_issues: number;
     watchers: number;
     default_branch: string;
-    permissions: Permissions;
+    permissions: IGithubRepositoryPermissions;
 }
 
 export interface IGithubRepositoryOwner {
@@ -103,9 +103,9 @@ export interface IGithubRepositoryOwner {
 }
 
 export interface IGithubRepositoryPermissions {
-    admin: boolean;
-    maintain: boolean;
-    push: boolean;
-    triage: boolean;
-    pull: boolean;
+    admin?: boolean;
+    maintain?: boolean;
+    push?: boolean;
+    triage?: boolean;
+    pull?: boolean;
 }
